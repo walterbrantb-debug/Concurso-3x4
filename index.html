@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Tracker Campaña 3→4 — 24m (Agosto & Septiembre 2025)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+  <style>
+    html,body{background:#f8fafc}
+    .badge{font-size:.70rem; padding:.15rem .5rem; border-radius:999px}
+    .card{cursor:pointer}
+    .card:hover{box-shadow:0 6px 24px rgba(0,0,0,.06)}
+    th.sortable{cursor:pointer; user-select:none}
+    th.sortable .arrow{font-size:.7em; opacity:.6; margin-left:.25rem}
+    .switch{border:1px solid rgba(0,0,0,.08); border-radius:999px; background:#fff;}
+    .switch button{padding:.25rem .6rem; border-radius:999px; font-size:.75rem}
+    .switch button.active{background:#111827; color:#fff}
+  </style>
+</head>
+<body class="text-gray-900">
+  <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+      <div class="h-9 w-9 rounded-2xl bg-gray-900 text-white flex items-center justify-center text-sm font-semibold">C34</div>
+      <div>
+        <h1 class="text-lg sm:text-xl font-semibold">Tracker Campaña 3→4 — Pólizas 24 meses</h1>
+        <p class="text-xs text-gray-500">Mes: <strong id="lblMes">Agosto 2025</strong> · Bono $55.000 por póliza · Campaña: <strong>3→4 (bono único)</strong> · <span class="ml-1">Brutas totales (todas): <strong id="kTotBrutas">157</strong></span> · <span>Brutas 24m: <strong id="k24Brutas">139</strong></span></p>
+      </div>
+      <div class="ml-auto flex items-center gap-2">
+        <div class="switch flex items-center p-1" role="tablist" aria-label="Seleccionar mes">
+          <button class="switch-mes active" data-mes="2025-08">Ago</button>
+          <button class="switch-mes" data-mes="2025-09">Sep*</button>
+        </div>
+        <button id="btnPdf" class="px-3 py-1.5 rounded-xl border text-xs">Descargar PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <!-- Fuente -->
+    <section class="bg-white rounded-2xl p-4 shadow-sm border">
+      <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+        <span>Fuente Ago: <em>Ventas al cierre Ago 25.xlsx</em> + <em>Cancelaciones GE 2025‑09‑12</em> (solo convenios 24M)</span>
+        <span class="mx-2">|</span>
+        <span>Fuente Sep*: <em>Ventas_2025-09.xlsx</em> (acumulado a la fecha, 24M ≈ <em>Nro. Cuotas = 24</em>) + <em>Cancelaciones GE 2025‑09‑12</em></span>
+      </div>
+    </section>
+
+    <!-- KPIs (click para filtrar tabla) -->
+    <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+      <div class="bg-white rounded-2xl p-4 shadow-sm border card" data-seg="0 ventas" title="Filtrar tabla: 0 ventas">
+        <p class="text-xs text-gray-500">Vendedores con 0 ventas</p>
+        <p id="k0" class="text-2xl font-semibold">—</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border card" data-seg="1 de 3" title="Filtrar tabla: 1/3">
+        <p class="text-xs text-gray-500">A 2 de la meta (1/3)</p>
+        <p id="k1" class="text-2xl font-semibold">—</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border card" data-seg="2 de 3" title="Filtrar tabla: 2/3">
+        <p class="text-xs text-gray-500">A 1 de la meta (2/3)</p>
+        <p id="k2" class="text-2xl font-semibold">—</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border card" data-seg="cumplió 3" title="Filtrar tabla: cumplieron 3">
+        <p class="text-xs text-gray-500">Cumplieron (3 netas)</p>
+        <p id="k3" class="text-2xl font-semibold">—</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border card" data-seg="sobre 3" title="Filtrar tabla: 4+">
+        <p class="text-xs text-gray-500">Sobrecumplieron (4+ netas)</p>
+        <p id="k4" class="text-2xl font-semibold">—</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border card" data-seg="all" title="Limpiar filtro">
+        <p class="text-xs text-gray-500">Pago estimado total</p>
+        <p id="kPago" class="text-2xl font-semibold">—</p>
+        <p class="text-[11px] text-gray-500">Campaña: 3→4 (bono único)</p>
+      </div>
+    </section>
+
+    <!-- Alertas de cancelaciones que bajan de 3 a 2 -->
+    <section id="alertasBox" class="hidden bg-white rounded-2xl p-4 shadow-sm border">
+      <h3 class="text-base font-semibold mb-2">Alertas: cayeron bajo el umbral por cancelaciones</h3>
+      <div id="alertasList" class="text-sm text-gray-700"></div>
+    </section>
+
+    <!-- Listas accionables (orden por Dealer → Vendedor) -->
+    <section class="grid gap-4 lg:grid-cols-3">
+      <div class="bg-white rounded-2xl p-4 shadow-sm border">
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="text-sm font-semibold">A 2 de la meta (1/3)</h3>
+          <span class="badge bg-amber-100 text-amber-800" id="b1">—</span>
+        </div>
+        <ul id="list1" class="text-sm space-y-1"></ul>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border">
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="text-sm font-semibold">A 1 de la meta (2/3)</h3>
+          <span class="badge bg-emerald-100 text-emerald-800" id="b2">—</span>
+        </div>
+        <ul id="list2" class="text-sm space-y-1"></ul>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border">
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="text-sm font-semibold">Cumplieron (3+)</h3>
+          <span class="badge bg-indigo-100 text-indigo-800" id="b3">—</span>
+        </div>
+        <ul id="list3" class="text-sm space-y-1"></ul>
+      </div>
+    </section>
+
+    <!-- Tabla detalle -->
+    <section class="bg-white rounded-2xl p-4 shadow-sm border">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <h3 class="text-base font-semibold">Detalle por vendedor (solo 24m) — <span id="lblMes2">Agosto 2025</span></h3>
+          <div id="chipFilter" class="hidden items-center gap-2 text-xs border rounded-full px-2 py-1">
+            <span>Filtro activo:</span>
+            <span id="chipSeg" class="font-semibold"></span>
+            <button id="btnClear" class="px-2 py-0.5 border rounded-full">Quitar</button>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 text-sm">
+          <label class="text-xs text-gray-500">Buscar</label>
+          <input id="q" type="text" placeholder="Nombre / Rut / Dealer" class="border rounded-xl px-3 py-1.5 text-sm"/>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm" id="tbl">
+          <thead>
+            <tr class="text-left text-gray-500 border-b">
+              <th class="py-2 sortable" data-key="vendedor">Vendedor <span class="arrow" data-for="vendedor"></span></th>
+              <th class="py-2 sortable" data-key="rut">Rut <span class="arrow" data-for="rut"></span></th>
+              <th class="py-2 sortable" data-key="dealer">Dealer <span class="arrow" data-for="dealer"></span></th>
+              <th class="py-2 text-right sortable" data-key="brutas">Brutas <span class="arrow" data-for="brutas"></span></th>
+              <th class="py-2 text-right sortable" data-key="canc">Cancel. <span class="arrow" data-for="canc"></span></th>
+              <th class="py-2 text-right sortable" data-key="netas">Netas 24m <span class="arrow" data-for="netas"></span></th>
+              <th class="py-2 text-right sortable" data-key="distancia">Distancia <span class="arrow" data-for="distancia"></span></th>
+              <th class="py-2 text-right sortable" data-key="objetivo">Objetivo actual <span class="arrow" data-for="objetivo"></span></th>
+              <th class="py-2 text-right sortable" data-key="pago">Pago Estimado <span class="arrow" data-for="pago"></span></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100" id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const BONO = 55000;
+    const nf0 = new Intl.NumberFormat('es-CL', {maximumFractionDigits:0});
+
+    // === Datos embebidos ===
+    // Agosto 2025 (fijo, como acordamos)
+    const DATA_AUG = [
+      {"vendedor":"Patricia Avalos","rut":"17353061-7","dealer":"Compra Justa","brutas":3,"canc":1,"netas":2},
+      {"vendedor":"Felipe Miranda","rut":"12449791-4","dealer":"E. Kovacs","brutas":3,"canc":1,"netas":2},
+      {"vendedor":"Eduardo Díaz","rut":"18270459-2","dealer":"Suzuki Servimaq","brutas":5,"canc":0,"netas":5},
+      {"vendedor":"Matías Atton","rut":"17891958-9","dealer":"E. Kovacs","brutas":7,"canc":0,"netas":7},
+      {"vendedor":"Genaro Orellana","rut":"14749120-4","dealer":"Tanner","brutas":5,"canc":0,"netas":5},
+      {"vendedor":"Rolando Garcia","rut":"12418677-9","dealer":"E. Kovacs","brutas":4,"canc":0,"netas":4},
+      {"vendedor":"Matias Garrido","rut":"18853268-2","dealer":"E. Kovacs","brutas":6,"canc":0,"netas":6},
+      {"vendedor":"Marco Antonio Catalán","rut":"11918741-9","dealer":"E. Kovacs","brutas":4,"canc":0,"netas":4},
+      {"vendedor":"Fabrizio Araya","rut":"19792437-0","dealer":"E. Kovacs","brutas":4,"canc":0,"netas":4},
+      {"vendedor":"NESTOR ORREGO","rut":"9329449-7","dealer":"Tanner","brutas":4,"canc":0,"netas":4},
+      {"vendedor":"Gonzalo Maldonado Merino","rut":"14035130-7","dealer":"DTM / Rui Zhi / JM","brutas":5,"canc":0,"netas":5},
+      {"vendedor":"Diego Vergara","rut":"16688963-1","dealer":"Tanner","brutas":3,"canc":0,"netas":3},
+      {"vendedor":"Marcela Contreras","rut":"10685779-k","dealer":"Tanner","brutas":3,"canc":0,"netas":3},
+      {"vendedor":"ROBERT MORA","rut":"12203970-4","dealer":"Tanner","brutas":3,"canc":0,"netas":3},
+      {"vendedor":"Felipe García","rut":"16799367-k","dealer":"E. Kovacs","brutas":3,"canc":0,"netas":3},
+      {"vendedor":"Hector Aparicio","rut":"7876877-0","dealer":"E. Kovacs","brutas":3,"canc":0,"netas":3},
+      {"vendedor":"Lissette Mellado","rut":"18528811-2","dealer":"E. Kovacs","brutas":3,"canc":0,"netas":3},
+      {"vendedor":"Boris Urrutian","rut":"14114651-2","dealer":"E. Kovacs","brutas":4,"canc":1,"netas":3},
+      {"vendedor":"Christian Tobias Orellana","rut":"16682620-9","dealer":"E. Kovacs","brutas":3,"canc":0,"netas":3},
+      {"vendedor":"Sebastián Suazo","rut":"17642958-4","dealer":"E. Kovacs","brutas":3,"canc":0,"netas":3},
+      {"vendedor":"María Eugenia Soto","rut":"13907053-2","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Maximiliano Aguilera","rut":"19598299-2","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Felipe Contreras","rut":"18606429-6","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Joseph Millañir Bustos","rut":"18555050-8","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"María Angélica Maldonado","rut":"12678662-7","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Pablo Morales","rut":"16012477-1","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Soledad Ojeda","rut":"13085955-7","dealer":"E. Kovacs","brutas":3,"canc":1,"netas":2},
+      {"vendedor":"Victor Cavieres Meya","rut":"15368889-3","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Boris Cabezón","rut":"17160975-8","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Rodrigo Quiroz","rut":"12601119-6","dealer":"E. Kovacs","brutas":3,"canc":1,"netas":2},
+      {"vendedor":"Marlene Rojas","rut":"14354153-6","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Bárbara Isla","rut":"19348967-7","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Carlos Arredondo","rut":"16432797-1","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Inti Quezada","rut":"17091666-4","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Boris Escobar","rut":"7933929-0","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"ARIS NAVARRO","rut":"11697345-8","dealer":"Tanner","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"David Medina Iturra","rut":"14788337-6","dealer":"DTM / Rui Zhi / JM","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"ANDRES Torres","rut":"18905977-3","dealer":"Tanner","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Camilo Ardiles","rut":"19272675-5","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Boris Zuniga","rut":"12168115-4","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Leonardo Alarcon","rut":"17952708-6","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Henrry Hidalgo","rut":"11372336-4","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"adela Espinoza","rut":"12152315-6","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Jorge Toscano","rut":"17656041-4","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Sergio Ibarra","rut":"11740626-4","dealer":"DTM / Rui Zhi / JM","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Pedro Madrid","rut":"17912487-3","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Carlos Menares","rut":"14296046-9","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Isidora Alvarado M","rut":"20558192-8","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Evelyn Sandoval","rut":"16394672-7","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Gonzalo Villarroel","rut":"14576912-2","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Elias Silva","rut":"7684136-1","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"enzo jopia","rut":"15782785-0","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Giampiero fondas","rut":"17019625-8","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Elias San Martin","rut":"17983253-1","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Triana Pereira","rut":"17888572-6","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Matias Avendaño","rut":"19398418-3","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Katherine Muñoz","rut":"15703996-0","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"César Orellana","rut":"18707866-2","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Pablo Cabrera","rut":"17019853-k","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Antonia Saravia","rut":"20450745-3","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"María Fernanda Mella","rut":"17216844-2","dealer":"E. Kovacs","brutas":1,"canc":1,"netas":0},
+      {"vendedor":"Gerardo Gutierrez","rut":"12065870-6","dealer":"E. Kovacs","brutas":1,"canc":1,"netas":0},
+      {"vendedor":"Francisco Martinez","rut":"13385532-0","dealer":"E. Kovacs","brutas":3,"canc":3,"netas":0},
+      {"vendedor":"Cristian Concha","rut":"15292884-8","dealer":"E. Kovacs","brutas":2,"canc":1,"netas":1},
+      {"vendedor":"Javiera Roa","rut":"17860981-3","dealer":"E. Kovacs","brutas":2,"canc":1,"netas":1},
+      {"vendedor":"David Paillao","rut":"19643507-0","dealer":"E. Kovacs","brutas":2,"canc":1,"netas":1},
+      {"vendedor":"Alejandro Andonie","rut":"15430746-6","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Wilfredo Guerrero","rut":"14225357-5","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Valentina Pavez","rut":"20251459-6","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Sebastian Perez","rut":"18843372-7","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Luis Morales","rut":"15862912-7","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Ignacio Palominos","rut":"20235125-1","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Diego Atenas","rut":"20157155-3","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Sebastián Urrutia","rut":"11870429-8","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Constanza Urtubia","rut":"20644669-3","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Juan Pablo Rozas","rut":"18418835-5","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Rodolfo Almeida","rut":"13049675-1","dealer":"DTM / Rui Zhi / JM","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Cristian Morales","rut":"14710347-5","dealer":"Tanner","brutas":1,"canc":0,"netas":1}
+    ];
+
+    // Septiembre 2025 (acumulado a la fecha, calculado desde Ventas_2025-09.xlsx + canc GE 2025-09-12)
+    const DATA_SEP = [
+      {"vendedor":"Giselle Briones Morales","rut":"17624608-1","dealer":"Autocredit Expres","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Enrique Chureo Niepel","rut":"14096131-0","dealer":"Automotriz Mirasur Temuco","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Alexis Andres Cardenas Tapia","rut":"16285280-9","dealer":"Automotriz Santa Maria","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Gustavo Cruz Segura","rut":"18433678-2","dealer":"Automotriz Santa Maria","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Barbara Alejandra Laviosa Perez","rut":"26800420-3","dealer":"Bilbaortega Car","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Carlos Eduardo Rojas Luengo","rut":"20213461-6","dealer":"Bilbaortega Car","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Maria Fernanda Gonzalez Acuna","rut":"17666350-7","dealer":"Compra Justa","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Patricia Avalos","rut":"17353061-7","dealer":"Compra Justa","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Jorge Andres Fonseca Mella","rut":"14293807-3","dealer":"Ek2 Spa","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Alexi Suazo","rut":"13582245-8","dealer":"Ek2 Spa","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Fernanda Viviana Castañeda Fuentes","rut":"13706316-6","dealer":"Servicios Automotriz Ansar Spa","brutas":3,"canc":0,"netas":3},
+      {"vendedor":"Gustavo Chicche Contreras","rut":"16627957-6","dealer":"Servicios Automotriz Ansar Spa","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Pablo Luis Maldonado","rut":"12798779-6","dealer":"Servicios Automotriz Ansar Spa","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Francesca Monaco","rut":"16587640-K","dealer":"Tecnocid","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Alexis Ayala Plaza","rut":"13830912-6","dealer":"Servicios Automotriz Ansar Spa","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Alvaro Piturra Rojas","rut":"15545652-3","dealer":"Guillermo Morales Ltda","brutas":3,"canc":0,"netas":3},
+      {"vendedor":"Paola Delgado","rut":"13734947-7","dealer":"Autoplus Spa","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Cristian Espinoza Acuña","rut":"17216194-4","dealer":"Maritano Y Ebensperger","brutas":3,"canc":0,"netas":3},
+      {"vendedor":"Manuel Eduardo Salcedo","rut":"12013659-3","dealer":"Maritano Y Ebensperger","brutas":5,"canc":0,"netas":5},
+      {"vendedor":"Alexis Ayala Plaza","rut":"13830912-6","dealer":"Maritano Y Ebensperger","brutas":0,"canc":0,"netas":0},
+      {"vendedor":"Lucas Musura Aguirre","rut":"17406801-1","dealer":"E. Kovacs","brutas":3,"canc":0,"netas":3},
+      {"vendedor":"Angelo Francisco Jiron Calderon","rut":"10867594-2","dealer":"E. Kovacs","brutas":3,"canc":0,"netas":3},
+      {"vendedor":"Ignacio Pozo","rut":"16985635-0","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Juan Antonio Hermosilla","rut":"11642492-4","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Robert Marin","rut":"25917664-6","dealer":"E. Kovacs","brutas":3,"canc":0,"netas":3},
+      {"vendedor":"Franco Vega Lazo","rut":"16334658-3","dealer":"E. Kovacs","brutas":2,"canc":0,"netas":2},
+      {"vendedor":"Luz Adriana Solis Barrera","rut":"27844122-8","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Joaquin Bravo","rut":"18823242-8","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Felipe Miranda","rut":"12449791-4","dealer":"E. Kovacs","brutas":1,"canc":0,"netas":1},
+      {"vendedor":"Diego Atenas","rut":"20157155-3","dealer":"E. Kovacs","brutas":0,"canc":0,"netas":0},
+      {"vendedor":"Miguel Corales Castro","rut":"15907000-K","dealer":"Mediterraneo Automotores S.A.","brutas":3,"canc":0,"netas":3},
+      {"vendedor":"Alexis Ayala Plaza","rut":"13830912-6","dealer":"Maritano Y Ebensperger","brutas":0,"canc":0,"netas":0}
+    ];
+
+    const DATASETS = {
+      '2025-08': { label:'Agosto 2025', totals: { all:157, m24:139 }, rows: DATA_AUG },
+      '2025-09': { label:'Septiembre 2025 (acum)', totals: { all:63, m24:56 }, rows: DATA_SEP }
+    };
+
+    const state = { mes:'2025-08', full: [], filterSeg: null, sortKey: 'pago', sortDir: 'desc' };
+
+    function recalc() {
+      const cur = DATASETS[state.mes];
+      const src = cur.rows || [];
+      // Cálculo con bono único 3→4 (sin repetir por bloques)
+      state.full = src.map(x => {
+        const base = x.netas; // netas determinan el umbral
+        const nextTarget = 3;
+        const pago = (base * BONO) + (base >= 3 ? BONO : 0);
+        const distancia = Math.max(0, nextTarget - base);
+        let segmento = '0 ventas';
+        if(base===1) segmento='1 de 3';
+        else if(base===2) segmento='2 de 3';
+        else if(base===3) segmento='cumplió 3';
+        else if(base>3) segmento='sobre 3';
+        return { ...x, objetivo: nextTarget, pago, distancia, segmento };
+      });
+      render();
+      selfTests();
+    }
+
+    function sortByDealerVendor(a,b){
+      return (a.dealer||'').localeCompare(b.dealer||'') || (a.vendedor||'').localeCompare(b.vendedor||'');
+    }
+
+    function setSortArrows(){
+      document.querySelectorAll('th.sortable .arrow').forEach(el=>{ el.textContent=''; });
+      const arrow = document.querySelector(`th.sortable[data-key="${state.sortKey}"] .arrow`);
+      if(arrow) arrow.textContent = state.sortDir==='asc'?'▲':'▼';
+    }
+
+    // Marca visual del KPI activo
+    function updateCardActiveUI(){
+      const seg = state.filterSeg;
+      document.querySelectorAll('.card').forEach(card=>{
+        const active = !!(seg && seg!=='all' && card.dataset.seg===seg);
+        card.classList.toggle('ring-2', active);
+        card.classList.toggle('ring-emerald-500', active);
+        card.classList.toggle('border-emerald-500', active);
+        card.classList.toggle('bg-emerald-50', active);
+        card.setAttribute('aria-pressed', active ? 'true' : 'false');
+        card.title = active ? 'Filtro activo' : card.title;
+      });
+    }
+
+    function render() {
+      const cur = DATASETS[state.mes];
+      const arr = state.full.slice();
+
+      // Header dinámico
+      document.getElementById('lblMes').textContent = cur.label;
+      document.getElementById('lblMes2').textContent = cur.label;
+      const k24 = document.getElementById('k24Brutas'); if(k24) k24.textContent = nf0.format(cur.totals.m24);
+      const kTot = document.getElementById('kTotBrutas'); if(kTot) kTot.textContent = nf0.format(cur.totals.all);
+
+      // KPIs
+      const k0 = arr.filter(x=>x.netas===0).length;
+      const k1 = arr.filter(x=>x.netas===1).length;
+      const k2 = arr.filter(x=>x.netas===2).length;
+      const k3 = arr.filter(x=>x.netas===3).length;
+      const k4 = arr.filter(x=>x.netas>3).length;
+      const totalPago = arr.reduce((s,x)=>s+x.pago,0);
+      document.getElementById('k0').textContent = nf0.format(k0);
+      document.getElementById('k1').textContent = nf0.format(k1);
+      document.getElementById('k2').textContent = nf0.format(k2);
+      document.getElementById('k3').textContent = nf0.format(k3);
+      document.getElementById('k4').textContent = nf0.format(k4);
+      document.getElementById('kPago').textContent = '$'+nf0.format(totalPago);
+
+      // Alertas: brutas>=3 y netas<3
+      const alertas = arr.filter(x=> x.brutas>=3 && x.netas<3);
+      const alertBox = document.getElementById('alertasBox');
+      const alertList = document.getElementById('alertasList');
+      if(alertas.length){
+        alertBox.classList.remove('hidden');
+        alertList.innerHTML = alertas.sort(sortByDealerVendor).map(a=>`<div class="py-1 flex items-center justify-between">
+          <span>${a.vendedor} <span class="text-gray-400">(${a.dealer})</span></span>
+          <span class="text-xs text-gray-500">Tenías ${a.brutas}, canceladas ${a.canc} → netas ${a.netas}</span>
+        </div>`).join('');
+      } else { alertBox.classList.add('hidden'); alertList.innerHTML=''; }
+
+      // Listas accionables (orden por Dealer > Vendedor)
+      const l1 = arr.filter(x=>x.netas===1).sort(sortByDealerVendor).slice(0,100);
+      const l2 = arr.filter(x=>x.netas===2).sort(sortByDealerVendor).slice(0,100);
+      const l3 = arr.filter(x=>x.netas>=3).sort(sortByDealerVendor).slice(0,100);
+      document.getElementById('b1').textContent = l1.length;
+      document.getElementById('b2').textContent = l2.length;
+      document.getElementById('b3').textContent = l3.length;
+      const li = (x)=>`<li class="flex items-center justify-between"><span>${x.dealer} — <span class="font-medium">${x.vendedor}</span></span></li>`;
+      document.getElementById('list1').innerHTML = l1.map(li).join('') || '<p class="text-xs text-gray-500">—</p>';
+      document.getElementById('list2').innerHTML = l2.map(li).join('') || '<p class="text-xs text-gray-500">—</p>';
+      document.getElementById('list3').innerHTML = l3.map(li).join('') || '<p class="text-xs text-gray-500">—</p>';
+
+      // Tabla (filtro + ordenamiento por encabezado)
+      const q = (document.getElementById('q').value||'').toLowerCase();
+      const seg = state.filterSeg;
+      let rows = arr.filter(r=>
+        (!seg || seg==='all' || r.segmento===seg) &&
+        (!q || r.vendedor.toLowerCase().includes(q) || r.rut.toLowerCase().includes(q) || r.dealer.toLowerCase().includes(q))
+      );
+      const key = state.sortKey; const dir = state.sortDir;
+      rows.sort((a,b)=>{
+        const va = a[key], vb = b[key];
+        if(typeof va === 'number' && typeof vb === 'number') return dir==='asc'? va-vb : vb-va;
+        return dir==='asc' ? String(va||'').localeCompare(String(vb||'')) : String(vb||'').localeCompare(String(va||''));
+      });
+      document.getElementById('tbody').innerHTML = rows.map(r=>`<tr>
+        <td class="py-1.5">${r.vendedor}</td>
+        <td class="py-1.5">${r.rut}</td>
+        <td class="py-1.5">${r.dealer}</td>
+        <td class="py-1.5 text-right">${nf0.format(r.brutas)}</td>
+        <td class="py-1.5 text-right">${nf0.format(r.canc)}</td>
+        <td class="py-1.5 text-right">${nf0.format(r.netas)}</td>
+        <td class="py-1.5 text-right">${nf0.format(r.distancia)}</td>
+        <td class="py-1.5 text-right">${nf0.format(r.objetivo)}</td>
+        <td class="py-1.5 text-right">$${nf0.format(r.pago)}</td>
+      </tr>`).join('');
+
+      // Chip filtro y flechas de orden
+      const chip = document.getElementById('chipFilter');
+      if(seg && seg!=='all'){ chip.classList.remove('hidden'); document.getElementById('chipSeg').textContent = seg; } else { chip.classList.add('hidden'); }
+      updateCardActiveUI();
+      setSortArrows();
+    }
+
+    // KPI -> filtrar tabla + Switch mes
+    document.addEventListener('click', (e)=>{
+      const card = e.target.closest('.card');
+      if(card){
+        const seg = card.dataset.seg || null;
+        if(seg==='all'){ state.filterSeg = null; }
+        else if(state.filterSeg===seg){ state.filterSeg = null; }
+        else { state.filterSeg = seg; }
+        render();
+        return;
+      }
+      const btn = e.target.closest('.switch-mes');
+      if(btn){
+        document.querySelectorAll('.switch-mes').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        state.mes = btn.dataset.mes;
+        state.filterSeg = null; // limpiar filtros al cambiar de mes
+        state.sortKey='pago'; state.sortDir='desc';
+        document.getElementById('q').value='';
+        recalc();
+        return;
+      }
+      if(e.target && e.target.id==='btnClear'){ state.filterSeg = null; render(); return; }
+    });
+
+    // Buscar
+    document.getElementById('q').addEventListener('input', render);
+
+    // Sort por encabezado
+    document.querySelectorAll('th.sortable').forEach(th=>{
+      th.addEventListener('click', ()=>{
+        const key = th.dataset.key; if(!key) return;
+        if(state.sortKey===key){ state.sortDir = state.sortDir==='asc'?'desc':'asc'; }
+        else { state.sortKey = key; state.sortDir = (['vendedor','rut','dealer'].includes(key)?'asc':'desc'); }
+        render();
+      });
+    });
+
+    // PDF
+    document.getElementById('btnPdf').addEventListener('click', ()=>{
+      const el = document.querySelector('main');
+      const id = state.mes==='2025-08' ? '2025-08' : '2025-09-acum';
+      html2pdf().from(el).set({ margin:10, filename:`Tracker-C34-${id}.pdf`, html2canvas:{scale:2}, jsPDF:{unit:'mm', format:'a4', orientation:'portrait'} }).save();
+    });
+
+    // Tests mínimos en consola (sanity checks)
+    function selfTests(){
+      try {
+        const cur = DATASETS[state.mes];
+        const arr = state.full;
+        console.assert(Array.isArray(arr) && arr.length>=0, 'DATA debe tener filas');
+        // 1) Brutas 24m no puede exceder total (del header)
+        const sumBrutas24 = arr.reduce((s,x)=>s+(x.brutas||0),0);
+        if(sumBrutas24 !== cur.totals.m24){
+          console.warn(`[${cur.label}] Aviso: DATA 24m suma ${sumBrutas24} pero el header usa ${cur.totals.m24}.`);
+        }
+        // 2) Coherencia por fila: brutas = netas + canc
+        console.assert(arr.every(x=> (x.brutas||0) === (x.netas||0)+(x.canc||0)), 'Cada fila debe cumplir brutas = netas + canc');
+        // 3) Segmentación cubre todas las filas
+        const segSum = [0,1,2,3,'gt3'].map(m=> m==='gt3'? arr.filter(x=>x.netas>3).length : arr.filter(x=>x.netas===m).length).reduce((a,b)=>a+b,0);
+        console.assert(segSum===arr.length, 'Segmentación debe cubrir todas las filas');
+        // 4) Pago: verificar muestras estándar
+        const sample3 = arr.find(x=>x.netas===3);
+        if(sample3){ const p = (3*BONO)+BONO; console.assert(sample3.pago===p, 'Pago 3 netas debe ser 4*BONO'); }
+        const sample2 = arr.find(x=>x.netas===2);
+        if(sample2){ const p2 = (2*BONO); console.assert(sample2.pago===p2, 'Pago 2 netas debe ser 2*BONO'); }
+        // 5) UI: al activar un filtro, el KPI debe marcarse
+        const prev = state.filterSeg; state.filterSeg='1 de 3'; render();
+        const card = document.querySelector('.card[data-seg="1 de 3"]');
+        console.assert(card && card.getAttribute('aria-pressed')==='true', 'KPI resaltado debe activarse');
+        state.filterSeg = prev; render();
+        console.log('%cSelf-tests OK','color:green');
+      } catch(err){ console.error('Self-tests error', err); }
+    }
+
+    // Init
+    (function init(){
+      state.mes='2025-08';
+      state.sortKey='pago'; state.sortDir='desc';
+      recalc();
+    })();
+  </script>
+</body>
+</html>
