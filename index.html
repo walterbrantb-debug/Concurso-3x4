@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Tracker Campaña 3→4 — 24m (Agosto & Septiembre 2025)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+  <style>
+    html,body{background:#f8fafc}
+    .badge{font-size:.70rem; padding:.15rem .5rem; border-radius:999px}
+    .card{cursor:pointer}
+    .card:hover{box-shadow:0 6px 24px rgba(0,0,0,.06)}
+    th.sortable{cursor:pointer; user-select:none}
+    th.sortable .arrow{font-size:.7em; opacity:.6; margin-left:.25rem}
+    .switch{border:1px solid rgba(0,0,0,.08); border-radius:999px; background:#fff;}
+    .switch button{padding:.25rem .6rem; border-radius:999px; font-size:.75rem}
+    .switch button.active{background:#111827; color:#fff}
+    .chip{border:1px solid rgba(0,0,0,.08); border-radius:999px; padding:.15rem .6rem; font-size:.75rem}
+      .seg-container details{border:1px solid rgba(0,0,0,.06); border-radius:12px; background:#fff}
+    .seg-container details+details{margin-top:.5rem}
+    .seg-container summary{list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:.5rem .75rem; border-bottom:1px solid rgba(0,0,0,.06); background:#f9fafb; border-radius:12px}
+    .seg-container summary::-webkit-details-marker{display:none}
+    .seg-dealer{font-weight:600}
+    .seg-count{font-size:.7rem; padding:.15rem .5rem; border-radius:999px; background:#eef2ff; color:#3730a3}
+    .seg-ul{padding:.35rem .5rem}
+    .seg-li{display:flex; align-items:center; justify-content:space-between; padding:.25rem .25rem}
+    .seg-pill{font-size:.7rem; border:1px solid rgba(0,0,0,.08); border-radius:999px; padding:.1rem .5rem}
+    .seg-actions button{border:1px solid rgba(0,0,0,.08); border-radius:999px; padding:.2rem .5rem; font-size:.7rem}
+  </style>
+</head>
+<body class="text-gray-900">
+  <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+      <div class="h-9 w-9 rounded-2xl bg-gray-900 text-white flex items-center justify-center text-sm font-semibold">C34</div>
+      <div>
+        <h1 class="text-lg sm:text-xl font-semibold">Tracker Campaña 3→4 — Pólizas 24 meses</h1>
+        <p class="text-xs text-gray-500">Mes: <strong id="lblMes">Agosto 2025</strong> · Bono $55.000 por póliza · Campaña: <strong>3→4 (bono único)</strong> · <span class="ml-1">Brutas totales (todas): <strong id="kTotBrutas">157</strong></span> · <span>Brutas 24m: <strong id="k24Brutas">107</strong></span></p>
+      </div>
+      <div class="ml-auto flex items-center gap-2">
+        <div class="switch flex items-center p-1" role="tablist" aria-label="Seleccionar mes">
+          <button class="switch-mes active" data-mes="2025-08">Ago</button>
+          <button class="switch-mes" data-mes="2025-09">Sep*</button>
+        </div>
+        <button id="btnPdf" class="px-3 py-1.5 rounded-xl border text-xs">Descargar PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-4">
+    <!-- Fuente & Auditoría -->
+    <section class="bg-white rounded-2xl p-4 shadow-sm border">
+      <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+        <span>Fuente Ago: <em>Ventas al cierre Ago 25.xlsx</em> + <em>Cancelaciones GE 2025‑09‑12</em> + <em>Glosa.xlsx</em> (dealer por RUT)</span>
+        <span class="mx-2">|</span>
+        <span>Fuente Sep*: <em>Ventas_2025-09.xlsx</em> (acumulado a la fecha) + <em>Cancelaciones GE 2025‑09‑12</em> + <em>Glosa.xlsx</em></span>
+      </div>
+      <div id="auditoria" class="mt-2 flex flex-wrap items-center gap-2 text-xs"></div>
+    </section>
+
+    <!-- KPIs (click para filtrar tabla) -->
+    <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+      <div class="bg-white rounded-2xl p-4 shadow-sm border card" data-seg="0 ventas" title="Filtrar tabla: 0 ventas">
+        <p class="text-xs text-gray-500">Vendedores con 0 ventas</p>
+        <p id="k0" class="text-2xl font-semibold">—</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border card" data-seg="1 de 3" title="Filtrar tabla: 1/3">
+        <p class="text-xs text-gray-500">A 2 de la meta (1/3)</p>
+        <p id="k1" class="text-2xl font-semibold">—</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border card" data-seg="2 de 3" title="Filtrar tabla: 2/3">
+        <p class="text-xs text-gray-500">A 1 de la meta (2/3)</p>
+        <p id="k2" class="text-2xl font-semibold">—</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border card" data-seg="cumplió 3" title="Filtrar tabla: cumplieron 3">
+        <p class="text-xs text-gray-500">Cumplieron (3 netas)</p>
+        <p id="k3" class="text-2xl font-semibold">—</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border card" data-seg="sobre 3" title="Filtrar tabla: 4+">
+        <p class="text-xs text-gray-500">Sobrecumplieron (4+ netas)</p>
+        <p id="k4" class="text-2xl font-semibold">—</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border card" data-seg="all" title="Limpiar filtro">
+        <p class="text-xs text-gray-500">Pago estimado total</p>
+        <p id="kPago" class="text-2xl font-semibold">—</p>
+        <p class="text-[11px] text-gray-500">Campaña: 3→4 (bono único)</p>
+      </div>
+    </section>
+
+    <!-- Alertas de cancelaciones que bajan de 3 a 2 -->
+    <section id="alertasBox" class="bg-white rounded-2xl p-4 shadow-sm border">
+      <h3 id="alertasTitle" class="text-base font-semibold mb-2">Alertas: cayeron bajo el umbral por cancelaciones</h3>
+      <div id="alertasList" class="text-sm text-gray-700"></div>
+    </section>
+
+    <!-- Listas accionables (orden por Dealer → Vendedor) -->
+    <section id="segBlocks" class="grid gap-4 lg:grid-cols-3">
+      <div class="bg-white rounded-2xl p-4 shadow-sm border">
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="text-sm font-semibold">A 2 de la meta (1/3)</h3>
+          <span class="badge bg-amber-100 text-amber-800" id="b1">—</span>
+        </div>
+        <ul id="list1" class="text-sm space-y-1"></ul>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border">
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="text-sm font-semibold">A 1 de la meta (2/3)</h3>
+          <span class="badge bg-emerald-100 text-emerald-800" id="b2">—</span>
+        </div>
+        <ul id="list2" class="text-sm space-y-1"></ul>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border">
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="text-sm font-semibold">Cumplieron (3+)</h3>
+          <span class="badge bg-indigo-100 text-indigo-800" id="b3">—</span>
+        </div>
+        <ul id="list3" class="text-sm space-y-1"></ul>
+      </div>
+    </section>
+
+    <!-- Tabla detalle -->
+    <section id="tableBlock" class="bg-white hidden rounded-2xl p-4 shadow-sm border">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <h3 class="text-base font-semibold">Detalle por vendedor (solo 24m) — <span id="lblMes2">Agosto 2025</span></h3>
+          <div id="chipFilter" class="hidden items-center gap-2 text-xs border rounded-full px-2 py-1">
+            <span>Filtro activo:</span>
+            <span id="chipSeg" class="font-semibold"></span>
+            <button id="btnClear" class="px-2 py-0.5 border rounded-full">Quitar</button>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 text-sm">
+          <label class="text-xs text-gray-500">Buscar</label>
+          <input id="q" type="text" placeholder="Nombre / Rut / Dealer" class="border rounded-xl px-3 py-1.5 text-sm"/>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm" id="tbl">
+          <thead>
+            <tr class="text-left text-gray-500 border-b">
+              <th class="py-2 sortable" data-key="vendedor">Vendedor <span class="arrow" data-for="vendedor"></span></th>
+              <th class="py-2 sortable" data-key="rut">Rut <span class="arrow" data-for="rut"></span></th>
+              <th class="py-2 sortable" data-key="dealer">Dealer <span class="arrow" data-for="dealer"></span></th>
+              <th class="py-2 text-right sortable" data-key="brutas">Brutas <span class="arrow" data-for="brutas"></span></th>
+              <th class="py-2 text-right sortable" data-key="canc">Cancel. <span class="arrow" data-for="canc"></span></th>
+              <th class="py-2 text-right sortable" data-key="netas">Netas 24m <span class="arrow" data-for="netas"></span></th>
+              <th class="py-2 text-right sortable" data-key="distancia">Distancia <span class="arrow" data-for="distancia"></span></th>
+              <th class="py-2 text-right sortable" data-key="objetivo">Objetivo actual <span class="arrow" data-for="objetivo"></span></th>
+              <th class="py-2 text-right sortable" data-key="pago">Pago Estimado <span class="arrow" data-for="pago"></span></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100" id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const BONO = 55000;
+    const nf0 = new Intl.NumberFormat('es-CL', {maximumFractionDigits:0});
+
+    // === Datos 24m (agregados por vendedor) ===
+    const DATA_AUG = [
+      {"vendedor": "Carla Muñoz", "rut": "20221662-5", "dealer": "Automotriz Santa Maria", "brutas": 2, "canc": 0, "netas": 2},
+      {"vendedor": "Maria Tacko", "rut": "27602851-8", "dealer": "Automotriz Santa Maria", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Jaime Maulen Gallardo", "rut": "13178401-4", "dealer": "Automotriz Santa Maria", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Robinson Bravo Romero", "rut": "13377516-0", "dealer": "Automotriz Santa Maria", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Dino Tapia Oyarzun", "rut": "10895276-8", "dealer": "Automotriz Egaña", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Robinson Andrade", "rut": "12882969-2", "dealer": "Automotriz Egaña", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Carla Muñoz", "rut": "20221662-5", "dealer": "Automotriz Santa Maria", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Varinia Hales Fuenzalida", "rut": "13665147-8", "dealer": "Autoplus Spa", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Paola Delgado", "rut": "13734947-7", "dealer": "Autoplus Spa", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Roberto Salas", "rut": "12321156-6", "dealer": "CARRI", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Michelle Ferrada Soto", "rut": "18975661-7", "dealer": "Compra Justa", "brutas": 2, "canc": 0, "netas": 2},
+      {"vendedor": "Patricia Avalos", "rut": "17353061-7", "dealer": "Compra Justa", "brutas": 3, "canc": 1, "netas": 2},
+      {"vendedor": "Felipe Iribarren", "rut": "18282886-4", "dealer": "DTM / Rui Zhi / JM", "brutas": 2, "canc": 0, "netas": 2},
+      {"vendedor": "Gonzalo Maldonado Merino", "rut": "14035130-7", "dealer": "DTM / Rui Zhi / JM", "brutas": 2, "canc": 0, "netas": 2},
+      {"vendedor": "Rodolfo Almeida", "rut": "13049675-1", "dealer": "DTM / Rui Zhi / JM", "brutas": 2, "canc": 0, "netas": 2},
+      {"vendedor": "Sergio Ibarra", "rut": "11740626-4", "dealer": "DTM / Rui Zhi / JM", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "José Zamora Campos", "rut": "16298077-0", "dealer": "Ek2 Spa", "brutas": 4, "canc": 0, "netas": 4},
+      {"vendedor": "Garrido Comercio de Vehiculos Limitada", "rut": "96685720-7", "dealer": "Garrido Autos", "brutas": 4, "canc": 0, "netas": 4},
+      {"vendedor": "Fabián Chunir Gonzales", "rut": "19593822-7", "dealer": "Guillermo Morales Ltda", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Bastián López", "rut": "19006872-1", "dealer": "Guillermo Morales Ltda", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Alvaro Piturra Rojas", "rut": "15545652-3", "dealer": "Guillermo Morales Ltda", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Franco Figueroa", "rut": "19813410-0", "dealer": "Guillermo Morales Ltda", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Monica Ramírez", "rut": "18966514-5", "dealer": "Guillermo Morales Ltda", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Sebastián Carmona Caro", "rut": "17497807-2", "dealer": "Automotriz Egaña", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Juan Chavez", "rut": "8132879-3", "dealer": "Automotriz Egaña", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Cristopher Sanchez Macaya", "rut": "19084513-0", "dealer": "Automotriz Egaña", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Cristobal Cortes", "rut": "18743877-0", "dealer": "Automotriz Egaña", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Angelo Francisco Jiron Calderon", "rut": "10867594-2", "dealer": "E. Kovacs", "brutas": 5, "canc": 0, "netas": 5},
+      {"vendedor": "Juan Antonio Hermosilla", "rut": "11642492-4", "dealer": "E. Kovacs", "brutas": 5, "canc": 0, "netas": 5},
+      {"vendedor": "Robert Marin", "rut": "25917664-6", "dealer": "E. Kovacs", "brutas": 5, "canc": 0, "netas": 5},
+      {"vendedor": "Franklyn Teran Viera", "rut": "26211236-5", "dealer": "E. Kovacs", "brutas": 5, "canc": 0, "netas": 5},
+      {"vendedor": "Raul Esteban Hernandez Soto", "rut": "18319184-5", "dealer": "E. Kovacs", "brutas": 4, "canc": 0, "netas": 4},
+      {"vendedor": "Felipe Miranda", "rut": "12449791-4", "dealer": "E. Kovacs", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Maria Paz Castillo", "rut": "16539288-4", "dealer": "E. Kovacs", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Alejandra Berrios Guerrero", "rut": "18782316-1", "dealer": "E. Kovacs", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Mario Antonio Pereira Zavala", "rut": "10531636-4", "dealer": "E. Kovacs", "brutas": 2, "canc": 0, "netas": 2},
+      {"vendedor": "Yulimar De La Villa", "rut": "26330942-1", "dealer": "E. Kovacs", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Lucas Musura Aguirre", "rut": "17406801-1", "dealer": "E. Kovacs", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Cristian Jesus Vasquez Diaz", "rut": "15740429-6", "dealer": "E. Kovacs", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Giovanni Salvador Guerrero Molina", "rut": "18882740-0", "dealer": "Maritano Y Ebensperger", "brutas": 4, "canc": 0, "netas": 4},
+      {"vendedor": "Manuel Eduardo Salcedo", "rut": "12013659-3", "dealer": "Maritano Y Ebensperger", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Cristian Espinoza Acuña", "rut": "17216194-4", "dealer": "Maritano Y Ebensperger", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Miguel Corales Castro", "rut": "15907000-K", "dealer": "Mediterraneo Automotores S.A.", "brutas": 4, "canc": 0, "netas": 4},
+      {"vendedor": "Paola Gaete", "rut": "15204548-7", "dealer": "Mediterraneo Automotores S.A.", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Guillermo Jose Sesto Tognola", "rut": "12455177-5", "dealer": "Mediterraneo Automotores S.A.", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Fernanda Viviana Castañeda Fuentes", "rut": "13706316-6", "dealer": "Servicios Automotriz Ansar Spa", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Gustavo Chicche Contreras", "rut": "16627957-6", "dealer": "Servicios Automotriz Ansar Spa", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Pablo Luis Maldonado", "rut": "12798779-6", "dealer": "Servicios Automotriz Ansar Spa", "brutas": 1, "canc": 0, "netas": 1}
+    ];
+
+    const DATA_SEP = [
+      {"vendedor": "Giselle Briones Morales", "rut": "17624608-1", "dealer": "Autocredit Expres", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Enrique Chureo Niepel", "rut": "14096131-0", "dealer": "Automotriz Mirasur Temuco", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Maria Fernanda Gonzalez Acuna", "rut": "17666350-7", "dealer": "Compra Justa", "brutas": 2, "canc": 0, "netas": 2},
+      {"vendedor": "Patricia Avalos", "rut": "17353061-7", "dealer": "Compra Justa", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Jorge Andres Fonseca Mella", "rut": "14293807-3", "dealer": "Ek2 Spa", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Alexi Suazo", "rut": "13582245-8", "dealer": "Ek2 Spa", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Fernanda Viviana Castañeda Fuentes", "rut": "13706316-6", "dealer": "Servicios Automotriz Ansar Spa", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Gustavo Chicche Contreras", "rut": "16627957-6", "dealer": "Servicios Automotriz Ansar Spa", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Pablo Luis Maldonado", "rut": "12798779-6", "dealer": "Servicios Automotriz Ansar Spa", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Francesca Monaco", "rut": "16587640-K", "dealer": "Tecnocid", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Alexis Ayala Plaza", "rut": "13830912-6", "dealer": "Servicios Automotriz Ansar Spa", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Alvaro Piturra Rojas", "rut": "15545652-3", "dealer": "Guillermo Morales Ltda", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Paola Delgado", "rut": "13734947-7", "dealer": "Autoplus Spa", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Cristian Espinoza Acuña", "rut": "17216194-4", "dealer": "Maritano Y Ebensperger", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Manuel Eduardo Salcedo", "rut": "12013659-3", "dealer": "Maritano Y Ebensperger", "brutas": 5, "canc": 0, "netas": 5},
+      {"vendedor": "Lucas Musura Aguirre", "rut": "17406801-1", "dealer": "E. Kovacs", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Angelo Francisco Jiron Calderon", "rut": "10867594-2", "dealer": "E. Kovacs", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Ignacio Pozo", "rut": "16985635-0", "dealer": "E. Kovacs", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Juan Antonio Hermosilla", "rut": "11642492-4", "dealer": "E. Kovacs", "brutas": 2, "canc": 0, "netas": 2},
+      {"vendedor": "Robert Marin", "rut": "25917664-6", "dealer": "E. Kovacs", "brutas": 3, "canc": 0, "netas": 3},
+      {"vendedor": "Franco Vega Lazo", "rut": "16334658-3", "dealer": "E. Kovacs", "brutas": 2, "canc": 0, "netas": 2},
+      {"vendedor": "Luz Adriana Solis Barrera", "rut": "27844122-8", "dealer": "E. Kovacs", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Joaquin Bravo", "rut": "18823242-8", "dealer": "E. Kovacs", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Felipe Miranda", "rut": "12449791-4", "dealer": "E. Kovacs", "brutas": 1, "canc": 0, "netas": 1},
+      {"vendedor": "Miguel Corales Castro", "rut": "15907000-K", "dealer": "Mediterraneo Automotores S.A.", "brutas": 3, "canc": 0, "netas": 3}
+    ];
+
+    // === Universo GLOSA (110 únicos) ===
+    const UNIVERSE = [{"rut":"25927371-4","vendedor":"Carlos Albornoz Rojas","dealer":"Agusavi.Cl"},{"rut":"17200221-8","vendedor":"Francisco Carrasco Mainguyague","dealer":"Autoclick"},{"rut":"17624608-1","vendedor":"Giselle Briones Morales","dealer":"Autocredit Expres"},{"rut":"16587640-K","vendedor":"Francesca Monaco","dealer":"Tecnocid"},{"rut":"17370604-7","vendedor":"Cristian Araya Sepulveda","dealer":"Mdl Autos"},{"rut":"16466959-9","vendedor":"Harol Hernan Quiroz Aranea","dealer":"Mdl Autos"},{"rut":"19655567-5","vendedor":"Katherine Quebedo Alvarado","dealer":"Mdl Autos"},{"rut":"20075929-3","vendedor":"Ignacio Francisco Vielma Muñoz","dealer":"Mdl Autos"},{"rut":"17216194-4","vendedor":"Cristian Espinoza Acuña","dealer":"Maritano Y Ebensperger"},{"rut":"12013659-3","vendedor":"Manuel Eduardo Salcedo","dealer":"Maritano Y Ebensperger"},{"rut":"18882740-0","vendedor":"Giovanni Salvador Guerrero Molina","dealer":"Maritano Y Ebensperger"},{"rut":"10817163-5","vendedor":"Alexis Arturo Diaz Diaz","dealer":"Maritano Y Ebensperger"},{"rut":"17611195-2","vendedor":"Juan Orrego","dealer":"Maritano Y Ebensperger"},{"rut":"18910961-3","vendedor":"Alvaro Mora","dealer":"Maritano Y Ebensperger"},{"rut":"13493389-6","vendedor":"Rene Igor Villanueva","dealer":"Maritano Y Ebensperger"},{"rut":"17223422-2","vendedor":"Cristian Rogelio Cienfuegos Cisterna","dealer":"Maritano Y Ebensperger"},{"rut":"13483724-9","vendedor":"Rodrigo Cortes","dealer":"Maritano Y Ebensperger"},{"rut":"15899791-0","vendedor":"Fernanda Santander","dealer":"Maritano Y Ebensperger"},{"rut":"18391884-5","vendedor":"Alfredo Marambio Oyarce","dealer":"Portal Motors"},{"rut":"16516653-5","vendedor":"Cristhian Rojas Muñoz","dealer":"Portal Motors"},{"rut":"17406801-1","vendedor":"Lucas Musura Aguirre","dealer":"E. Kovacs"},{"rut":"25917664-6","vendedor":"Robert Marin","dealer":"E. Kovacs"},{"rut":"18319184-5","vendedor":"Raul Esteban Hernandez Soto","dealer":"E. Kovacs"},{"rut":"10867594-2","vendedor":"Angelo Francisco Jiron Calderon","dealer":"E. Kovacs"},{"rut":"11642492-4","vendedor":"Juan Antonio Hermosilla","dealer":"E. Kovacs"},{"rut":"12449791-4","vendedor":"Felipe Miranda","dealer":"E. Kovacs"},{"rut":"16334658-3","vendedor":"Franco Vega Lazo","dealer":"E. Kovacs"},{"rut":"16985635-0","vendedor":"Ignacio Pozo","dealer":"E. Kovacs"},{"rut":"18032482-8","vendedor":"Katina Glasinovic Arriaza","dealer":"E. Kovacs"},{"rut":"16484755-1","vendedor":"Andres Gonzalez","dealer":"E. Kovacs"},{"rut":"11628744-7","vendedor":"Mauricio Hormazabal","dealer":"E. Kovacs"},{"rut":"10531636-4","vendedor":"Mario Antonio Pereira Zavala","dealer":"E. Kovacs"},{"rut":"14083644-3","vendedor":"Julio Joaquin Silva Chacon","dealer":"E. Kovacs"},{"rut":"15740429-6","vendedor":"Cristian Jesus Vasquez Diaz","dealer":"E. Kovacs"},{"rut":"16539288-4","vendedor":"Maria Paz Castillo","dealer":"E. Kovacs"},{"rut":"18823242-8","vendedor":"Joaquin Bravo","dealer":"E. Kovacs"},{"rut":"27844122-8","vendedor":"Luz Adriana Solis Barrera","dealer":"E. Kovacs"},{"rut":"96685720-7","vendedor":"Garrido Comercio de Vehiculos Limitada","dealer":"Garrido Autos"},{"rut":"16048848-1","vendedor":"Sebastian Villarroel","dealer":"Garrido Autos"},{"rut":"17842224-1","vendedor":"Juan Pablo Cobos","dealer":"Garrido Autos"},{"rut":"16298077-0","vendedor":"José Zamora Campos","dealer":"Ek2 Spa"},{"rut":"14293807-3","vendedor":"Jorge Andres Fonseca Mella","dealer":"Ek2 Spa"},{"rut":"13582245-8","vendedor":"Alexi Suazo","dealer":"Ek2 Spa"},{"rut":"15989234-7","vendedor":"Ramiro Alejandro Moyano Tapia","dealer":"Ek2 Spa"},{"rut":"19627059-8","vendedor":"Cristian Gutierrez","dealer":"Automotora Del Sur"},{"rut":"19338046-7","vendedor":"Carlos Pizarro","dealer":"Automotora Del Sur"},{"rut":"24261718-4","vendedor":"Danae Venegas Hidalgo","dealer":"Automotora Del Sur"},{"rut":"19059610-2","vendedor":"Herman Retamal","dealer":"Automotora Del Sur"},{"rut":"20221662-5","vendedor":"Carla Muñoz","dealer":"Automotriz Santa Maria"},{"rut":"13377516-0","vendedor":"Robinson Bravo Romero","dealer":"Automotriz Santa Maria"},{"rut":"13178401-4","vendedor":"Jaime Maulen Gallardo","dealer":"Automotriz Santa Maria"},{"rut":"27602851-8","vendedor":"Maria Tacko","dealer":"Automotriz Santa Maria"},{"rut":"18966514-5","vendedor":"Monica Ramírez","dealer":"Guillermo Morales Ltda"},{"rut":"19813410-0","vendedor":"Franco Figueroa","dealer":"Guillermo Morales Ltda"},{"rut":"19593822-7","vendedor":"Fabián Chunir Gonzales","dealer":"Guillermo Morales Ltda"},{"rut":"15545652-3","vendedor":"Alvaro Piturra Rojas","dealer":"Guillermo Morales Ltda"},{"rut":"19006872-1","vendedor":"Bastián López","dealer":"Guillermo Morales Ltda"},{"rut":"18385445-9","vendedor":"Topher Adam Vera Cautivo","dealer":"Guillermo Morales Ltda"},{"rut":"25528764-0","vendedor":"David Alexander Hormazabal Ojeda","dealer":"Guillermo Morales Ltda"},{"rut":"16581440-1","vendedor":"Eduardo Castillo Delgado","dealer":"Promotorschile"},{"rut":"18580067-0","vendedor":"David Diaz","dealer":"Promotorschile"},{"rut":"17353061-7","vendedor":"Patricia Avalos","dealer":"Compra Justa"},{"rut":"18975661-7","vendedor":"Michelle Ferrada Soto","dealer":"Compra Justa"},{"rut":"17666350-7","vendedor":"Maria Fernanda Gonzalez Acuna","dealer":"Compra Justa"},{"rut":"15204548-7","vendedor":"Paola Gaete","dealer":"Mediterraneo Automotores S.A."},{"rut":"15907000-K","vendedor":"Miguel Corales Castro","dealer":"Mediterraneo Automotores S.A."},{"rut":"12455177-5","vendedor":"Guillermo Jose Sesto Tognola","dealer":"Mediterraneo Automotores S.A."},{"rut":"21446418-7","vendedor":"Jair Alexander Vivas Angulo","dealer":"Mediterraneo Automotores S.A."},{"rut":"25651734-0","vendedor":"Cristian Rivera","dealer":"Mediterraneo Automotores S.A."},{"rut":"25790339-6","vendedor":"Diego Esteban Urrutia Rojas","dealer":"Mediterraneo Automotores S.A."},{"rut":"13734947-7","vendedor":"Paola Delgado","dealer":"Autoplus Spa"},{"rut":"13665147-8","vendedor":"Varinia Hales Fuenzalida","dealer":"Autoplus Spa"},{"rut":"24165807-9","vendedor":"Orellana Palomino Morelia","dealer":"Autoplus Spa"},{"rut":"14517165-0","vendedor":"Jean Pierre Leiva Matus","dealer":"Autoplus Spa"},{"rut":"19235094-7","vendedor":"Francisco Martinez","dealer":"Autoplus Spa"},{"rut":"12321156-6","vendedor":"Roberto Salas","dealer":"CARRI"},{"rut":"14096131-0","vendedor":"Enrique Chureo Niepel","dealer":"Automotriz Mirasur Temuco"},{"rut":"15069758-3","vendedor":"Sebastian Gomez","dealer":"Automotriz Fernando Gomez Y Cia. Ltda."},{"rut":"11170010-K","vendedor":"Jose Uribe","dealer":"Automotriz Fernando Gomez Y Cia. Ltda."},{"rut":"10895276-8","vendedor":"Dino Tapia Oyarzun","dealer":"Automotriz Egaña"},{"rut":"19084513-0","vendedor":"Cristopher Sanchez Macaya","dealer":"Automotriz Egaña"},{"rut":"16065359-0","vendedor":"Sergio Opazo","dealer":"Automotriz Colon"},{"rut":"15393926-1","vendedor":"Maria Antonieta Silva","dealer":"Automotriz Colon"},{"rut":"11055183-3","vendedor":"Patricio Olivares","dealer":"Automotriz Civas"},{"rut":"7681795-7","vendedor":"Cristian Barrera","dealer":"Automotriz Civas"},{"rut":"14718852-9","vendedor":"Boris Gatica","dealer":"Tecnocid"},{"rut":"14174062-5","vendedor":"Rolando Castro","dealer":"Tecnocid"},{"rut":"15047193-1","vendedor":"Gustavo Aracena","dealer":"Tecnocid"},{"rut":"23940838-6","vendedor":"Nataly Yocelin Arredondo Maldonado","dealer":"Tecnocid"},{"rut":"14035130-7","vendedor":"Gonzalo Maldonado Merino","dealer":"DTM / Rui Zhi / JM"},{"rut":"13049675-1","vendedor":"Rodolfo Almeida","dealer":"DTM / Rui Zhi / JM"},{"rut":"11740626-4","vendedor":"Sergio Ibarra","dealer":"DTM / Rui Zhi / JM"},{"rut":"18282886-4","vendedor":"Felipe Iribarren","dealer":"DTM / Rui Zhi / JM"},{"rut":"20293126-3","vendedor":"Bastian Retamal","dealer":"Automotora Mediterraneo-Fernandez-Santa Maria-MyE"},{"rut":"16380081-8","vendedor":"Hector Alveal","dealer":"Automotora Mediterraneo-Fernandez-Santa Maria-MyE"},{"rut":"20188654-5","vendedor":"Felipe Burboa","dealer":"Automotora Mediterraneo-Fernandez-Santa Maria-MyE"},{"rut":"25778513-7","vendedor":"Claudia Vidal","dealer":"Automotora Mediterraneo-Fernandez-Santa Maria-MyE"},{"rut":"23567352-2","vendedor":"Veronica Vanica","dealer":"Automotora Mediterraneo-Fernandez-Santa Maria-MyE"},{"rut":"20689255-4","vendedor":"Bastian Rivas","dealer":"Automotora Mediterraneo-Fernandez-Santa Maria-MyE"},{"rut":"20293144-1","vendedor":"Javiera Mondaca","dealer":"Automotora Mediterraneo-Fernandez-Santa Maria-MyE"},{"rut":"18866923-7","vendedor":"Carlos Arcos","dealer":"Automotora Mediterraneo-Fernandez-Santa Maria-MyE"},{"rut":"20559375-6","vendedor":"Alexander Aravena","dealer":"Automotora Mediterraneo-Fernandez-Santa Maria-MyE"}];
+
+    // === DATASETS ===
+    const DATASETS = {
+      '2025-08': { label: 'Agosto 2025',            totals: { all: 157, m24: 107 }, rows: DATA_AUG },
+      '2025-09': { label: 'Septiembre 2025 (acum)', totals: { all:  63, m24:  46 }, rows: DATA_SEP }
+    };
+
+    const state = { mes:'2025-08', full: [], filterSeg: null, sortKey: 'pago', sortDir: 'desc' };
+
+    function recalc() {
+      const cur = DATASETS[state.mes];
+      const src = (cur.rows || []).slice();
+      // Map ventas por RUT (agrega duplicados por RUT)
+      const agg = new Map();
+      src.forEach(r=>{
+        if(!agg.has(r.rut)){
+          agg.set(r.rut, { rut:r.rut, vendedor:r.vendedor, dealer:r.dealer, brutas:r.brutas||0, canc:r.canc||0, netas:r.netas||0 });
+        } else {
+          const t = agg.get(r.rut);
+          t.brutas += (r.brutas||0);
+          t.canc   += (r.canc||0);
+          t.netas  += (r.netas||0);
+        }
+      });
+      const byRut = agg;
+      const uniSet = new Set(UNIVERSE.map(u=>u.rut));
+
+      // Merge universo + ventas
+      const merged = UNIVERSE.map(u=>{
+        const r = byRut.get(u.rut);
+        const brutas = r ? r.brutas : 0;
+        const canc   = r ? r.canc   : 0;
+        const netas  = r ? r.netas  : 0;
+        const nextTarget = 3;
+        const pago = (netas * BONO) + (netas >= 3 ? BONO : 0);
+        const distancia = Math.max(0, nextTarget - netas);
+        let segmento = '0 ventas';
+        if(netas===1) segmento='1 de 3';
+        else if(netas===2) segmento='2 de 3';
+        else if(netas===3) segmento='cumplió 3';
+        else if(netas>3) segmento='sobre 3';
+        return { vendedor:u.vendedor, rut:u.rut, dealer:u.dealer, brutas, canc, netas, objetivo:nextTarget, pago, distancia, segmento };
+      });
+
+      // Extras (altas nuevas no presentes en GLOSA)
+      const extras = src.filter(r=>!uniSet.has(r.rut)).map(x=>{
+        const nextTarget = 3;
+        const pago = (x.netas * BONO) + (x.netas >= 3 ? BONO : 0);
+        const distancia = Math.max(0, nextTarget - x.netas);
+        let segmento = '0 ventas';
+        if(x.netas===1) segmento='1 de 3';
+        else if(x.netas===2) segmento='2 de 3';
+        else if(x.netas===3) segmento='cumplió 3';
+        else if(x.netas>3) segmento='sobre 3';
+        return { vendedor:x.vendedor, rut:x.rut, dealer:x.dealer, brutas:x.brutas, canc:x.canc, netas:x.netas, objetivo:nextTarget, pago, distancia, segmento };
+      });
+
+      state.full = merged.concat(extras);
+      render();
+      selfTests();
+    }
+
+    function sortByDealerVendor(a,b){
+      return (a.dealer||'').localeCompare(b.dealer||'') || (a.vendedor||'').localeCompare(b.vendedor||'');
+    }
+
+    function setSortArrows(){
+      document.querySelectorAll('th.sortable .arrow').forEach(el=>{ el.textContent=''; });
+      const arrow = document.querySelector(`th.sortable[data-key="${state.sortKey}"] .arrow`);
+      if(arrow) arrow.textContent = state.sortDir==='asc'?'▲':'▼';
+    }
+
+    // Marca visual del KPI activo
+    function updateCardActiveUI(){
+      const seg = state.filterSeg;
+      document.querySelectorAll('.card').forEach(card=>{
+        const active = !!(seg && seg!=='all' && card.dataset.seg===seg);
+        card.classList.toggle('ring-2', active);
+        card.classList.toggle('ring-emerald-500', active);
+        card.classList.toggle('border-emerald-500', active);
+        card.classList.toggle('bg-emerald-50', active);
+        card.setAttribute('aria-pressed', active ? 'true' : 'false');
+        card.title = active ? 'Filtro activo' : card.title;
+      });
+    }
+
+    function updateTableVisibility(){
+      const tb = document.getElementById('tableBlock');
+      const show = !!(state.filterSeg && state.filterSeg!=='all');
+      if(tb){ tb.classList.toggle('hidden', !show); }
+    }
+
+    function render() {
+      const cur = DATASETS[state.mes];
+      const arr = state.full.slice();
+
+      // Header dinámico
+      document.getElementById('lblMes').textContent = cur.label;
+      document.getElementById('lblMes2').textContent = cur.label;
+      const k24 = document.getElementById('k24Brutas'); if(k24) k24.textContent = nf0.format(cur.totals.m24);
+      const kTot = document.getElementById('kTotBrutas'); if(kTot) kTot.textContent = nf0.format(cur.totals.all);
+
+      // Auditoría base (GLOSA vs panel)
+      const uniLen = UNIVERSE.length;
+      const extras = arr.filter(r=>!UNIVERSE.find(u=>u.rut===r.rut));
+      const conVentas = arr.filter(r=>UNIVERSE.find(u=>u.rut===r.rut) && r.netas>0).length;
+      const sinVentas = uniLen - conVentas;
+      const aud = document.getElementById('auditoria');
+      aud.innerHTML = `
+        <span class="chip">Universo GLOSA: <strong>${nf0.format(uniLen)}</strong></span>
+        <span class="chip">En GLOSA sin ventas: <strong>${nf0.format(sinVentas)}</strong></span>
+        <span class="chip">En GLOSA con ventas: <strong>${nf0.format(conVentas)}</strong></span>
+        <span class="chip">Altas nuevas (no GLOSA): <strong>${nf0.format(extras.length)}</strong></span>
+      `;
+
+      // KPIs (sobre todos los vendedores del panel: GLOSA + altas nuevas)
+      const k0 = arr.filter(x=>x.netas===0).length;
+      const k1 = arr.filter(x=>x.netas===1).length;
+      const k2 = arr.filter(x=>x.netas===2).length;
+      const k3 = arr.filter(x=>x.netas===3).length;
+      const k4 = arr.filter(x=>x.netas>3).length;
+      const totalPago = arr.reduce((s,x)=>s+x.pago,0);
+      document.getElementById('k0').textContent = nf0.format(k0);
+      document.getElementById('k1').textContent = nf0.format(k1);
+      document.getElementById('k2').textContent = nf0.format(k2);
+      document.getElementById('k3').textContent = nf0.format(k3);
+      document.getElementById('k4').textContent = nf0.format(k4);
+      document.getElementById('kPago').textContent = '$'+nf0.format(totalPago);
+
+      // Alertas: brutas>=3 y netas<3
+      const alertas = arr.filter(x=> x.brutas>=3 && x.netas<3);
+      const alertBox = document.getElementById('alertasBox');
+      const alertTitle = document.getElementById('alertasTitle');
+      const alertList = document.getElementById('alertasList');
+      if(alertBox){ alertBox.classList.remove('hidden'); }
+      if(alertTitle){ alertTitle.textContent = `Alertas: cayeron bajo el umbral por cancelaciones (${alertas.length})`; }
+      if(alertas.length){
+        alertList.innerHTML = alertas.sort(sortByDealerVendor).map(a=>`<div class="py-1 flex items-center justify-between">
+          <span>${a.vendedor} <span class="text-gray-400">(${a.dealer})</span></span>
+          <span class="text-xs text-gray-500">Tenías ${a.brutas}, canceladas ${a.canc} → netas ${a.netas}</span>
+        </div>`).join('');
+      } else {
+        alertList.innerHTML = '<div class="text-sm text-gray-500">Sin alertas este mes (brutas ≥ 3 y netas < 3).</div>';
+      }
+
+      // Listas accionables (orden por Dealer > Vendedor)
+      const l1 = arr.filter(x=>x.netas===1).sort(sortByDealerVendor).slice(0,100);
+      const l2 = arr.filter(x=>x.netas===2).sort(sortByDealerVendor).slice(0,100);
+      const l3 = arr.filter(x=>x.netas>=3).sort(sortByDealerVendor).slice(0,100);
+      document.getElementById('b1').textContent = l1.length;
+      document.getElementById('b2').textContent = l2.length;
+      document.getElementById('b3').textContent = l3.length;
+      const li = (x)=>`<li class="flex items-center justify-between"><span>${x.dealer} — <span class="font-medium">${x.vendedor}</span></span></li>`;
+      document.getElementById('list1').innerHTML = l1.map(li).join('') || '<p class="text-xs text-gray-500">—</p>';
+      document.getElementById('list2').innerHTML = l2.map(li).join('') || '<p class="text-xs text-gray-500">—</p>';
+      document.getElementById('list3').innerHTML = l3.map(li).join('') || '<p class="text-xs text-gray-500">—</p>';
+
+      // Tabla (filtro + ordenamiento por encabezado)
+      const q = (document.getElementById('q').value||'').toLowerCase();
+      const seg = state.filterSeg;
+      let rows = arr.filter(r=>
+        (!seg || seg==='all' || r.segmento===seg) &&
+        (!q || r.vendedor.toLowerCase().includes(q) || r.rut.toLowerCase().includes(q) || r.dealer.toLowerCase().includes(q))
+      );
+      const key = state.sortKey; const dir = state.sortDir;
+      rows.sort((a,b)=>{
+        const va = a[key], vb = b[key];
+        if(typeof va === 'number' && typeof vb === 'number') return dir==='asc'? va-vb : vb-va;
+        return dir==='asc' ? String(va||'').localeCompare(String(vb||'')) : String(vb||'').localeCompare(String(va||''));
+      });
+      document.getElementById('tbody').innerHTML = rows.map(r=>`<tr>
+        <td class="py-1.5">${r.vendedor}</td>
+        <td class="py-1.5">${r.rut}</td>
+        <td class="py-1.5">${r.dealer}</td>
+        <td class="py-1.5 text-right">${nf0.format(r.brutas)}</td>
+        <td class="py-1.5 text-right">${nf0.format(r.canc)}</td>
+        <td class="py-1.5 text-right">${nf0.format(r.netas)}</td>
+        <td class="py-1.5 text-right">${nf0.format(r.distancia)}</td>
+        <td class="py-1.5 text-right">${nf0.format(r.objetivo)}</td>
+        <td class="py-1.5 text-right">$${nf0.format(r.pago)}</td>
+      </tr>`).join('');
+
+      // Chip filtro y flechas de orden
+      const chip = document.getElementById('chipFilter');
+      if(seg && seg!=='all'){ chip.classList.remove('hidden'); document.getElementById('chipSeg').textContent = seg; } else { chip.classList.add('hidden'); }
+      updateCardActiveUI();
+      updateTableVisibility();
+      setSortArrows();
+    }
+
+    // KPI -> filtrar tabla + Switch mes
+    document.addEventListener('click', (e)=>{
+      const card = e.target.closest('.card');
+      if(card){
+        const seg = card.dataset.seg || null;
+        if(seg==='all'){ state.filterSeg = null; }
+        else if(state.filterSeg===seg){ state.filterSeg = null; }
+        else { state.filterSeg = seg; }
+        updateTableVisibility();
+        render();
+        return;
+      }
+      const btn = e.target.closest('.switch-mes');
+      if(btn){
+        document.querySelectorAll('.switch-mes').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        state.mes = btn.dataset.mes;
+        state.filterSeg = null; // limpiar filtros al cambiar de mes
+        state.sortKey='pago'; state.sortDir='desc';
+        document.getElementById('q').value='';
+        recalc();
+        return;
+      }
+      if(e.target && e.target.id==='btnClear'){ state.filterSeg = null; render(); return; }
+    });
+
+    // Buscar
+    document.getElementById('q').addEventListener('input', render);
+
+    // Sort por encabezado
+    document.querySelectorAll('th.sortable').forEach(th=>{
+      th.addEventListener('click', ()=>{
+        const key = th.dataset.key; if(!key) return;
+        if(state.sortKey===key){ state.sortDir = state.sortDir==='asc'?'desc':'asc'; }
+        else { state.sortKey = key; state.sortDir = (['vendedor','rut','dealer'].includes(key)?'asc':'desc'); }
+        render();
+      });
+    });
+
+    // PDF
+    document.getElementById('btnPdf').addEventListener('click', ()=>{
+      const el = document.querySelector('main');
+      const id = state.mes==='2025-08' ? '2025-08' : '2025-09-acum';
+      html2pdf().from(el).set({ margin:10, filename:`Tracker-C34-${id}.pdf`, html2canvas:{scale:2}, jsPDF:{unit:'mm', format:'a4', orientation:'portrait'} }).save();
+    });
+
+    // Tests mínimos (sanity checks)
+    function selfTests(){
+      try {
+        const cur = DATASETS[state.mes];
+        const arr = state.full;
+        console.assert(!!DATASETS['2025-08'] && !!DATASETS['2025-09'], 'DATASETS debe incluir 2025-08 y 2025-09');
+        console.assert(Array.isArray(arr), 'state.full debe ser array');
+        // 1) Brutas 24m = total header
+        const sumBrutas24 = arr.reduce((s,x)=>s+(x.brutas||0),0);
+        console.assert(sumBrutas24 === cur.totals.m24, `[${cur.label}] 24m sum ${sumBrutas24} debe = header ${cur.totals.m24}`);
+        // 2) Coherencia por fila: brutas = netas + canc
+        console.assert(arr.every(x=> (x.brutas||0) === (x.netas||0)+(x.canc||0)), 'Cada fila debe cumplir brutas = netas + canc');
+        // 3) Segmentación cubre todas las filas
+        const segSum = [0,1,2,3,'gt3']
+          .map(m=> m==='gt3'? arr.filter(x=>x.netas>3).length : arr.filter(x=>x.netas===m).length)
+          .reduce((a,b)=>a+b,0);
+        console.assert(segSum===arr.length, 'Segmentación debe cubrir todas las filas');
+        // 4) Universo = 110
+        console.assert(UNIVERSE.length===110, `Universo GLOSA debe ser 110 y es ${UNIVERSE.length}`);
+        // 5) Ningún RUT con más de 1 dealer tras el merge
+        const dealerByRut = new Map(); let multi = 0;
+        arr.forEach(r=>{ const prev = dealerByRut.get(r.rut); if(prev && prev!==r.dealer) multi++; else dealerByRut.set(r.rut, r.dealer); });
+        console.assert(multi===0, 'No debe haber RUT asignado a más de un dealer en el mismo mes');
+        console.log('%cSelf-tests OK','color:green');
+      } catch(err){ console.error('Self-tests error', err); }
+    }
+
+    // Init
+    (function init(){
+      state.mes='2025-08';
+      state.sortKey='pago';
+      state.sortDir='desc';
+      recalc();
+      updateTableVisibility();
+    })();
+  </script>
+</body>
+</html>
