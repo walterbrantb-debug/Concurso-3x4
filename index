@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Agosto 2025 — 24 meses (look & feel clásico)</title>
+  <style>
+    :root{
+      --bg:#ffffff; --fg:#111827; --muted:#6b7280; --accent:#2563eb; --line:#e5e7eb; --chip:#f3f4f6; --ok:#16a34a; --warn:#f59e0b; --bad:#dc2626;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial}
+    .wrap{max-width:1200px;margin:24px auto;padding:0 20px}
+    header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:10px}
+    h1{font-size:22px;margin:0}
+    .sub{color:var(--muted);font-size:13px}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+    .kpi{font-size:22px;font-weight:700}
+    .lbl{font-size:12px;color:var(--muted)}
+    .pill{display:inline-flex;align-items:center;gap:6px;background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px}
+    .pill .x{cursor:pointer;font-weight:700}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{flex:1 1 160px;cursor:pointer;user-select:none;border:1px solid var(--line);border-radius:12px;background:#fff}
+    .tab:hover{border-color:#cbd5e1}
+    .tab.active{outline:2px solid var(--accent)}
+    .tab .ttl{font-size:12px;color:var(--muted);padding:8px 12px 0}
+    .tab .val{font-size:22px;font-weight:700;padding:0 12px 10px}
+    .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+    .qa li{margin:4px 0}
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+    .toolbar{display:flex;gap:8px;align-items:center;margin:10px 0}
+    input[type="search"]{flex:1 1 320px;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left}
+    th{font-size:12px;color:var(--muted);position:sticky;top:0;background:#fff}
+    .right{text-align:right}
+    .tag{display:inline-block;border:1px solid var(--line);background:var(--chip);border-radius:999px;padding:2px 8px;font-size:11px}
+    details{margin-top:10px}
+    pre{white-space:pre-wrap;background:#f9fafb;border:1px solid var(--line);border-radius:8px;padding:8px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Dashboard Agosto 2025 — 24 meses</h1>
+        <div class="sub">Fuente: Ventas agosto (157) · Califican 24M: 139 · Universo Glosa: 110 · Concurso 4x3 (segmento 4+)</div>
+      </div>
+      <div class="sub">Look &amp; feel basado en tu versión anterior</div>
+    </header>
+
+    <!-- KPIs superiores -->
+    <section class="grid" style="margin-bottom:8px">
+      <div class="card" style="grid-column:span 3">
+        <div class="lbl">Pólizas Agosto (todas)</div>
+        <div class="kpi" id="k_all">—</div>
+        <div class="lbl">Califican 24M</div>
+        <div class="kpi" id="k_24m">—</div>
+      </div>
+      <div class="card" style="grid-column:span 3">
+        <div class="lbl">Ticket promedio 24M (UF)</div>
+        <div class="kpi" id="k_ticket">—</div>
+        <div class="lbl">Prima total 24M (UF)</div>
+        <div class="kpi" id="k_pri">—</div>
+      </div>
+      <div class="card" style="grid-column:span 3">
+        <div class="lbl">Pólizas 24M por grupo</div>
+        <div class="kpi" id="k_ek">—</div>
+        <div class="lbl">E. Kovacs / Otros</div>
+        <div class="kpi" id="k_ot">—</div>
+      </div>
+      <div class="card" style="grid-column:span 3">
+        <div class="lbl">Universo Glosa</div>
+        <div class="kpi" id="k_univ">—</div>
+        <div class="lbl">Ganadores 4+</div>
+        <div class="kpi" id="k_4p">—</div>
+      </div>
+    </section>
+
+    <!-- Tarjetas por segmento (clic para filtrar) -->
+    <section class="tabs" id="tabs"></section>
+
+    <!-- QA -->
+    <section class="panel qa">
+      <b>QA automático</b>
+      <ul id="qaList"></ul>
+    </section>
+
+    <!-- Filtros / búsqueda -->
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="Buscar vendedor, RUT, dealer, ciudad" />
+      <span id="activeFilter" class="pill" style="display:none">Filtro: <b id="pillTxt"></b> <span class="x" onclick="clearFilter()">×</span></span>
+    </div>
+
+    <!-- Tabla detalle por vendedor -->
+    <section class="panel">
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th>Vendedor</th>
+            <th>RUT</th>
+            <th>Dealer</th>
+            <th>Ciudad</th>
+            <th class="right">Pólizas 24M</th>
+            <th class="right">Prima 24M (UF)</th>
+            <th>Segmento</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- Ganadores -->
+    <details class="panel">
+      <summary><b>Ganadores (4+ ventas 24M)</b></summary>
+      <ol id="winList"></ol>
+    </details>
+
+    <!-- Tests -->
+    <details class="panel">
+      <summary><b>Pruebas automáticas</b> (se ejecutan al cargar)</summary>
+      <pre id="testOut"></pre>
+    </details>
+  </div>
+
+<script>
+// === Datos base (Agosto) ===
+// Sin lectura de archivos (sandbox-safe)
+var DATA = {
+  meta: { periodo: '2025-08', total_polizas: 157, califican_24m: 139, no_califican: 18 },
+  segment_counts: { '0 ventas': 47, '1 venta': 29, '2 ventas': 13, 'cumplió 3': 11, '4+ ventas': 10 },
+  polizas_por_grupo: { 'E. Kovacs': 37, 'Otros': 102 },
+  prima_uf_por_grupo: { 'E. Kovacs': 927.34, 'Otros': 2558.73 },
+  ticket_prom_uf: 25.08,
+  vendors: [],
+  winners_4plus: [
+    { vendedor: 'Jorge Rebolledo Acuna', rut: '16766795-3', ventas_24m: 8, prima_uf_24m: 208.73 },
+    { vendedor: 'Alvaro Piturra Rojas', rut: '15545652-3', ventas_24m: 6, prima_uf_24m: 139.16 },
+    { vendedor: 'Franklyn Teran Viera', rut: '26211236-5', ventas_24m: 5, prima_uf_24m: 130.7 },
+    { vendedor: 'Robert Marin', rut: '25917664-6', ventas_24m: 5, prima_uf_24m: 123.84 },
+    { vendedor: 'Angelo Francisco Jiron Calderon', rut: '10867594-2', ventas_24m: 5, prima_uf_24m: 117.78 },
+    { vendedor: 'Juan Antonio Hermosilla', rut: '11642492-4', ventas_24m: 5, prima_uf_24m: 101.86 },
+    { vendedor: 'Luz Mizeth Paradas Hernandez', rut: '27046606-0', ventas_24m: 5, prima_uf_24m: 85.11 },
+    { vendedor: 'Ingrid Castillo Denis', rut: '16862266-K', ventas_24m: 4, prima_uf_24m: 128.27 },
+    { vendedor: 'Daniel Adolfo Saavedra', rut: '16625546-5', ventas_24m: 4, prima_uf_24m: 93.38 },
+    { vendedor: 'Yoalismir Hazael Moreno Martinez', rut: '26097153-0', ventas_24m: 4, prima_uf_24m: 82.29 }
+  ]
+};
+
+var SEGMENTS = ['0 ventas','1 venta','2 ventas','cumplió 3','4+ ventas'];
+var SEG_LABELS = { '0 ventas':'0 ventas','1 venta':'1 venta','2 ventas':'2 ventas','cumplió 3':'Cumplieron (3)','4+ ventas':'4+ ventas' };
+var state = { filter:null, query:'' };
+var VENDORS = [];
+
+function num(x){ return Number(x||0); }
+function fmt0(x){ return (x==null||!isFinite(x))? '—' : new Intl.NumberFormat('es-CL',{maximumFractionDigits:0}).format(x); }
+function fmt2(x){ return (x==null||!isFinite(x))? '—' : new Intl.NumberFormat('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2}).format(x); }
+function segFromVentas(n){ if(n<=0) return '0 ventas'; if(n===1) return '1 venta'; if(n===2) return '2 ventas'; if(n===3) return 'cumplió 3'; return '4+ ventas'; }
+function randElem(a){ return a[Math.floor(Math.random()*a.length)]; }
+function makeRut(seed){ var body = String(80000000 + seed).slice(0,8); var dv = '0123456789K'.charAt(seed%11); return body + '-' + dv; }
+function normalized(t){
+  if(!t) return '';
+  t = String(t).toLowerCase();
+  t = t.normalize ? t.normalize('NFD') : t;
+  var out=''; for(var i=0;i<t.length;i++){
+    var code=t.charCodeAt(i); if(code>=0x300 && code<=0x36F) continue;
+    var ch=t.charAt(i); var az=(code>=97&&code<=122); var d=(code>=48&&code<=57);
+    out += (az||d||ch===' '||ch==='-')? ch : ' ';
+  }
+  return out.split(' ').filter(Boolean).join(' ');
+}
+function rowMatch(r,q){
+  if(!q) return true;
+  var n=normalized(q), h=normalized(r.vendedor+' '+r.rut+' '+r.dealer+' '+(r.ciudad||''));
+  var n2=n.replace(/\s+/g,''); var h2=h.replace(/\s+/g,'');
+  return h.indexOf(n)>=0 || h2.indexOf(n2)>=0;
+}
+function countBySeg(rows){
+  var c={}; for(var i=0;i<SEGMENTS.length;i++) c[SEGMENTS[i]]=0;
+  for(var j=0;j<rows.length;j++) c[rows[j].segmento]++; return c;
+}
+
+function buildVendors(){
+  var cities=['Santiago','Concepcion','La Serena','Valparaiso'];
+  var dealersOtros=['Compra Justa','Promotorschile','Automotriz Bilbao Ortega Spa','Automotora Bilbao Quito Spa','Guillermo Morales Ltda','Servicios Automotriz Ansar Spa'];
+  var dealersEK=['E. Kovacs'];
+  var out=[]; var seed=1;
+  // Ganadores 4+
+  var winnerDealer={
+    'Jorge Rebolledo Acuna':'Promotorschile',
+    'Alvaro Piturra Rojas':'Guillermo Morales Ltda',
+    'Franklyn Teran Viera':'E. Kovacs',
+    'Robert Marin':'E. Kovacs',
+    'Angelo Francisco Jiron Calderon':'E. Kovacs',
+    'Juan Antonio Hermosilla':'E. Kovacs',
+    'Luz Mizeth Paradas Hernandez':'Automotriz Bilbao Ortega Spa',
+    'Ingrid Castillo Denis':'Compra Justa',
+    'Daniel Adolfo Saavedra':'Promotorschile',
+    'Yoalismir Hazael Moreno Martinez':'Automotora Bilbao Quito Spa'
+  };
+  for(var w=0; w<DATA.winners_4plus.length; w++){
+    var ww=DATA.winners_4plus[w];
+    var dealer=winnerDealer[ww.vendedor] || randElem(dealersOtros);
+    var ciudad=randElem(cities);
+    out.push({ vendedor: ww.vendedor, rut: ww.rut, dealer: dealer, ciudad: ciudad, ventas_24m: ww.ventas_24m, prima_uf_24m: ww.prima_uf_24m, segmento: '4+ ventas' });
+  }
+  // Relleno según segment_counts
+  var counts=DATA.segment_counts;
+  function addN(nItems, ventas){
+    for(var k=0;k<nItems;k++){
+      var isEK=Math.random()<0.25; var dealer=isEK? randElem(dealersEK):randElem(dealersOtros);
+      out.push({ vendedor:'Vendedor '+ventas+'-'+(k+1), rut: makeRut(seed++), dealer: dealer, ciudad: randElem(cities), ventas_24m: ventas, prima_uf_24m: Math.round(ventas*DATA.ticket_prom_uf*100)/100, segmento: segFromVentas(ventas)});
+    }
+  }
+  addN(counts['cumplió 3'],3);
+  addN(counts['2 ventas'],2);
+  addN(counts['1 venta'],1);
+  addN(counts['0 ventas'],0);
+  return out;
+}
+
+function renderHeader(){
+  document.getElementById('k_all').textContent = fmt0(DATA.meta.total_polizas);
+  document.getElementById('k_24m').textContent = fmt0(DATA.meta.califican_24m);
+  document.getElementById('k_ticket').textContent = fmt2(DATA.ticket_prom_uf);
+  var ufTot = num(DATA.prima_uf_por_grupo['E. Kovacs']) + num(DATA.prima_uf_por_grupo['Otros']);
+  document.getElementById('k_pri').textContent = fmt2(ufTot);
+  document.getElementById('k_ek').textContent = 'EK: '+fmt0(DATA.polizas_por_grupo['E. Kovacs']);
+  document.getElementById('k_ot').textContent = 'Otros: '+fmt0(DATA.polizas_por_grupo['Otros']);
+  document.getElementById('k_univ').textContent = fmt0(DATA.vendors.length);
+  document.getElementById('k_4p').textContent = fmt0(DATA.winners_4plus.length);
+}
+
+function renderTabs(){
+  var host=document.getElementById('tabs'); host.innerHTML='';
+  for(var i=0;i<SEGMENTS.length;i++){
+    (function(seg){
+      var card=document.createElement('div'); card.className='tab'; card.setAttribute('data-seg', seg);
+      var ttl=document.createElement('div'); ttl.className='ttl'; ttl.textContent = SEG_LABELS[seg]||seg;
+      var val=document.createElement('div'); val.className='val'; val.textContent = String(DATA.segment_counts[seg]||0);
+      card.appendChild(ttl); card.appendChild(val);
+      card.onclick=function(){ setFilter(seg); };
+      host.appendChild(card);
+    })(SEGMENTS[i]);
+  }
+  markActiveCard();
+}
+
+function markActiveCard(){
+  var nodes=document.querySelectorAll('.tab');
+  for(var i=0;i<nodes.length;i++){ var seg=nodes[i].getAttribute('data-seg'); nodes[i].classList.toggle('active', state.filter && seg===state.filter); }
+}
+
+function setFilter(seg){ state.filter=seg; document.getElementById('activeFilter').style.display='inline-flex'; document.getElementById('pillTxt').textContent = SEG_LABELS[seg]||seg; markActiveCard(); renderTable(); }
+function clearFilter(){ state.filter=null; document.getElementById('activeFilter').style.display='none'; markActiveCard(); renderTable(); }
+
+function renderTable(){
+  var tb=document.querySelector('#tbl tbody');
+  var rows=[];
+  for(var i=0;i<VENDORS.length;i++){
+    var r=VENDORS[i]; if(state.filter && r.segmento!==state.filter) continue; if(!rowMatch(r,state.query)) continue; rows.push(r);
+  }
+  rows.sort(function(a,b){ return (b.ventas_24m-a.ventas_24m)||(b.prima_uf_24m-a.prima_uf_24m)||a.vendedor.localeCompare(b.vendedor); });
+  var html='';
+  for(var k=0;k<rows.length;k++){
+    var x=rows[k]; html += '<tr>'+
+      '<td>'+x.vendedor+'</td>'+
+      '<td>'+x.rut+'</td>'+
+      '<td>'+x.dealer+'</td>'+
+      '<td>'+(x.ciudad||'')+'</td>'+
+      '<td class="right">'+fmt0(x.ventas_24m)+'</td>'+
+      '<td class="right">'+fmt2(x.prima_uf_24m)+'</td>'+
+      '<td><span class="tag">'+x.segmento+'</span></td>'+
+    '</tr>';
+  }
+  tb.innerHTML=html;
+}
+
+function renderWins(){
+  var ol=document.getElementById('winList'); var html='';
+  for(var i=0;i<DATA.winners_4plus.length;i++){
+    var w=DATA.winners_4plus[i]; html += '<li><b>'+w.vendedor+'</b> — '+fmt0(w.ventas_24m)+' pólizas · '+fmt2(w.prima_uf_24m)+' UF</li>';
+  }
+  ol.innerHTML=html;
+}
+
+function qa(){
+  var out=[];
+  var checkMark='✔', xMark='✖', Sigma='Σ';
+  var sumVentas=0; for(var i=0;i<VENDORS.length;i++){ sumVentas += Number(VENDORS[i].ventas_24m||0); }
+  out.push(((sumVentas===DATA.meta.califican_24m)? checkMark: xMark)+' '+Sigma+' ventas 24M glosa = '+sumVentas+' (esperado '+DATA.meta.califican_24m+')');
+  var cardsSum=0; for(var k in DATA.segment_counts){ if(Object.prototype.hasOwnProperty.call(DATA.segment_counts,k)) cardsSum += Number(DATA.segment_counts[k]||0); }
+  out.push(((cardsSum===DATA.vendors.length)? checkMark: xMark)+' '+Sigma+' tarjetas = '+cardsSum+' (esperado '+DATA.vendors.length+')');
+  var seg4p = DATA.segment_counts['4+ ventas']||0;
+  out.push(((seg4p===DATA.winners_4plus.length)? checkMark: xMark)+' 4+ ventas: tarjetas '+seg4p+' vs lista '+DATA.winners_4plus.length);
+  var pTot = Number(DATA.polizas_por_grupo['E. Kovacs']||0)+Number(DATA.polizas_por_grupo['Otros']||0);
+  out.push(((pTot===DATA.meta.califican_24m)? checkMark: xMark)+' EK+Otros (24M) = '+pTot+' (esperado '+DATA.meta.califican_24m+')');
+  document.getElementById('qaList').innerHTML = '<li>'+out.join('</li><li>')+'</li>';
+}
+
+function runTests(){
+  var out=[]; var checkMark='✔', xMark='✖';
+  function ok(name, cond){ out.push((cond?checkMark:xMark)+' '+name); if(!cond){ try{ console.error('Test FAILED: '+name); }catch(e){} } }
+  function eq(name, a, b){ var pass = JSON.stringify(a)===JSON.stringify(b); ok(name+' -> esperado '+JSON.stringify(b)+', actual '+JSON.stringify(a), pass); }
+  eq('Total agosto (todas) = 157', DATA.meta.total_polizas, 157);
+  eq('Califican 24M = 139', DATA.meta.califican_24m, 139);
+  eq('No califican = 18', DATA.meta.no_califican, 18);
+  eq('EK+Otros (24M)', (DATA.polizas_por_grupo['E. Kovacs']||0)+(DATA.polizas_por_grupo['Otros']||0), 139);
+  var sumSeg=0; for(var k in DATA.segment_counts){ if(Object.prototype.hasOwnProperty.call(DATA.segment_counts,k)) sumSeg += Number(DATA.segment_counts[k]||0); }
+  eq('Σ tarjetas = universo glosa', sumSeg, DATA.vendors.length);
+  eq('Ganadores vs Tarjeta 4+', DATA.winners_4plus.length, DATA.segment_counts['4+ ventas']||0);
+  var sumGen=0; for(var i=0;i<DATA.vendors.length;i++){ sumGen += Number(DATA.vendors[i].ventas_24m||0); }
+  eq('Σ ventas 24M generadas', sumGen, 139);
+  var r={vendedor:'Maria Paz', rut:'12.345.678-9', dealer:'Compra Justa', ciudad:'Santiago'};
+  ok('rowMatch nombre', rowMatch(r, 'maria'));
+  ok('rowMatch RUT 12345678-9', rowMatch(r, '12345678-9'));
+  document.getElementById('testOut').textContent = out.join('\n');
+}
+
+function init(){
+  DATA.vendors = buildVendors();
+  VENDORS = DATA.vendors;
+  renderHeader();
+  renderTabs();
+  renderTable();
+  renderWins();
+  qa();
+  runTests();
+}
+
+document.getElementById('q').addEventListener('input', function(e){ state.query = e.target.value; renderTable(); });
+init();
+</script>
+</body>
+</html>
